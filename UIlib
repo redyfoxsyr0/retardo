@@ -1,7 +1,7 @@
 --[[
-    VORTEX X UI LIBRARY - PART 1: UI CREATION
-    This file creates the UI only
-    Usage: local vortexUI = loadstring(game:HttpGet("URL_TO_PART_1"))()
+    PART 1: UI LIBRARY
+    This is the UI creation library
+    Save this as your UI file
 ]]
 
 local VortexUI = {}
