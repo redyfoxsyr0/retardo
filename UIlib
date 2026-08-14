@@ -1,7 +1,6 @@
 --[[
-    PART 1: UI LIBRARY
-    This is the UI creation library
-    Save this as your UI file
+    VORTEX X UI LIBRARY
+    This creates the UI only
 ]]
 
 local VortexUI = {}
@@ -299,7 +298,7 @@ function VortexUI:CreateUI()
     playerLabel.Size = UDim2.new(0.55, -10, 1, 0)
     playerLabel.Position = UDim2.new(0, 5, 0, 0)
     playerLabel.BackgroundTransparency = 1
-    playerLabel.Text = "No Roblox"
+    playerLabel.Text = "Player [0]"
     playerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     playerLabel.TextSize = 12
     playerLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -378,7 +377,6 @@ function VortexUI:CreateUI()
     return uiRefs
 end
 
--- UI Control Functions
 function VortexUI:OpenUI()
     if not uiRefs.MainContainer then return end
     uiRefs.MainContainer.Visible = true
@@ -399,10 +397,6 @@ function VortexUI:ToggleUI()
     else
         self:OpenUI()
     end
-end
-
-function VortexUI:IsOpen()
-    return isOpen
 end
 
 function VortexUI:GetUI()
