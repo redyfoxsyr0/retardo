@@ -1,44 +1,23 @@
 --[[
-    Vortex X UI Library - Clean script hub with editor
-    Uses CoreGui for proper display
-    Usage: local vortex = loadstring(game:HttpGet("URL_TO_THIS_SCRIPT"))()
+    VORTEX X UI LIBRARY - PART 1: UI CREATION
+    This file creates the UI only
+    Usage: local vortexUI = loadstring(game:HttpGet("URL_TO_PART_1"))()
 ]]
 
-local VortexX = {}
+local VortexUI = {}
 
--- Version
-VortexX._VERSION = "3.0.0"
-
--- Internal storage
+-- Internal
 local uiRefs = {}
 local isOpen = false
-local scripts = {}
-local currentScript = nil
-local tabCounter = 1
 
--- Default scripts
-local defaultScripts = {
-    ["Arceus XV"] = "print('Arceus XV loaded!')",
-    ["better Wolf"] = "print('Better Wolf loaded!')",
-    ["fates.lua"] = "print('Fates loaded!')",
-    ["inf yrild.lua"] = "print('Infinite Yield loaded!')",
-    ["liath spam"] = "print('Light Spam loaded!')",
-    ["Mm2.lua"] = "print('MM2 loaded!')",
-    ["Script 1.lua"] = "print('Script 1 loaded!')",
-    ["WL3.lua"] = "print('WL3 loaded!')"
-}
-
---[[
-    Main UI Creation
-]]
-
-function VortexX:CreateUI()
+function VortexUI:CreateUI()
     if uiRefs.MainGui then
-        self:DestroyAll()
+        uiRefs.MainGui:Destroy()
+        uiRefs = {}
     end
     
     if not game or not game:GetService("CoreGui") then
-        error("This library requires Roblox environment with CoreGui")
+        error("Requires Roblox CoreGui")
         return
     end
     
@@ -46,7 +25,6 @@ function VortexX:CreateUI()
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "VortexX_MainUI"
     screenGui.ResetOnSpawn = false
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     screenGui.Parent = coreGui
     
     -- Main container
@@ -57,7 +35,7 @@ function VortexX:CreateUI()
     mainContainer.Visible = false
     mainContainer.Parent = screenGui
     
-    -- Background overlay
+    -- Overlay
     local overlay = Instance.new("Frame")
     overlay.Name = "Overlay"
     overlay.Size = UDim2.new(1, 0, 1, 0)
@@ -66,7 +44,6 @@ function VortexX:CreateUI()
     overlay.Visible = false
     overlay.Parent = mainContainer
     
-    -- Close overlay button
     local overlayButton = Instance.new("TextButton")
     overlayButton.Name = "OverlayButton"
     overlayButton.Size = UDim2.new(1, 0, 1, 0)
@@ -115,7 +92,7 @@ function VortexX:CreateUI()
     closeButton.Font = Enum.Font.SourceSansBold
     closeButton.Parent = titleBar
     
-    -- Top bar button (floating)
+    -- Top bar button
     local topBar = Instance.new("Frame")
     topBar.Name = "TopBar"
     topBar.Size = UDim2.new(0, 120, 0, 35)
@@ -143,7 +120,7 @@ function VortexX:CreateUI()
     contentFrame.BackgroundTransparency = 1
     contentFrame.Parent = mainFrame
     
-    -- Tabs section
+    -- Tabs
     local tabsFrame = Instance.new("Frame")
     tabsFrame.Name = "TabsFrame"
     tabsFrame.Size = UDim2.new(1, 0, 0, 30)
@@ -171,7 +148,6 @@ function VortexX:CreateUI()
     tabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
     tabsContainer.Parent = tabsFrame
     
-    -- Add tab button
     local addTabBtn = Instance.new("TextButton")
     addTabBtn.Name = "AddTabBtn"
     addTabBtn.Size = UDim2.new(0, 100, 1, 0)
@@ -221,7 +197,7 @@ function VortexX:CreateUI()
     scriptList.CanvasSize = UDim2.new(0, 0, 0, 0)
     scriptList.Parent = scriptsFrame
     
-    -- Separator 2
+    -- Separator
     local separator2 = Instance.new("Frame")
     separator2.Name = "Separator2"
     separator2.Size = UDim2.new(1, 0, 0, 1)
@@ -268,7 +244,7 @@ function VortexX:CreateUI()
     editorBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 100)
     editorBox.Parent = editorFrame
     
-    -- Button bar
+    -- Buttons
     local buttonBar = Instance.new("Frame")
     buttonBar.Name = "ButtonBar"
     buttonBar.Size = UDim2.new(1, 0, 0, 40)
@@ -309,7 +285,7 @@ function VortexX:CreateUI()
         buttons[name] = btn
     end
     
-    -- Player info and kill button
+    -- Player info
     local playerFrame = Instance.new("Frame")
     playerFrame.Name = "PlayerFrame"
     playerFrame.Size = UDim2.new(0, 180, 1, -5)
@@ -349,9 +325,9 @@ function VortexX:CreateUI()
         killBtn.BackgroundTransparency = 0.2
     end)
     
-    -- Draggable functionality
+    -- Draggable
     local dragging = false
-    local dragInput, dragStart, startPos
+    local dragStart, startPos
     
     titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -395,100 +371,29 @@ function VortexX:CreateUI()
         Buttons = buttons,
         PlayerLabel = playerLabel,
         KillBtn = killBtn,
-        OverlayButton = overlayButton
+        OverlayButton = overlayButton,
+        TitleBar = titleBar
     }
-    
-    -- Events
-    topButton.MouseButton1Click:Connect(function()
-        self:ToggleUI()
-    end)
-    
-    closeButton.MouseButton1Click:Connect(function()
-        self:CloseUI()
-    end)
-    
-    overlayButton.MouseButton1Click:Connect(function()
-        self:CloseUI()
-    end)
-    
-    addTabBtn.MouseButton1Click:Connect(function()
-        self:AddNewTab("Script " .. tabCounter)
-    end)
-    
-    buttons.Execute.MouseButton1Click:Connect(function()
-        self:ExecuteScript()
-    end)
-    
-    buttons.Clear.MouseButton1Click:Connect(function()
-        self:ClearEditor()
-    end)
-    
-    buttons.Open.MouseButton1Click:Connect(function()
-        self:OpenScript()
-    end)
-    
-    buttons.Save.MouseButton1Click:Connect(function()
-        self:SaveScript()
-    end)
-    
-    buttons.Inject.MouseButton1Click:Connect(function()
-        self:InjectScript()
-    end)
-    
-    killBtn.MouseButton1Click:Connect(function()
-        self:KillPlayer()
-    end)
-    
-    -- Keyboard shortcuts
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.Escape and isOpen then
-            self:CloseUI()
-        end
-        if input.KeyCode == Enum.KeyCode.F5 and isOpen then
-            self:ExecuteScript()
-        end
-        if input.KeyCode == Enum.KeyCode.F6 and isOpen then
-            self:ClearEditor()
-        end
-        if input.KeyCode == Enum.KeyCode.F7 and isOpen then
-            self:SaveScript()
-        end
-        if input.KeyCode == Enum.KeyCode.F8 and isOpen then
-            self:InjectScript()
-        end
-    end)
-    
-    -- Load default scripts
-    for name, content in pairs(defaultScripts) do
-        scripts[name] = content
-    end
-    self:RefreshScriptList()
-    self:AddNewTab("Script 1")
-    self:UpdatePlayerLabel()
     
     return uiRefs
 end
 
---[[
-    UI Control Functions
-]]
-
-function VortexX:OpenUI()
+-- UI Control Functions
+function VortexUI:OpenUI()
     if not uiRefs.MainContainer then return end
     uiRefs.MainContainer.Visible = true
     uiRefs.Overlay.Visible = true
     isOpen = true
 end
 
-function VortexX:CloseUI()
+function VortexUI:CloseUI()
     if not uiRefs.MainContainer or not isOpen then return end
     uiRefs.MainContainer.Visible = false
     uiRefs.Overlay.Visible = false
     isOpen = false
 end
 
-function VortexX:ToggleUI()
+function VortexUI:ToggleUI()
     if isOpen then
         self:CloseUI()
     else
@@ -496,289 +401,15 @@ function VortexX:ToggleUI()
     end
 end
 
-function VortexX:IsOpen()
+function VortexUI:IsOpen()
     return isOpen
 end
 
---[[
-    Tab Management
-]]
-
-function VortexX:AddNewTab(name)
-    local tabBtn = Instance.new("TextButton")
-    tabBtn.Name = "Tab_" .. name
-    tabBtn.Size = UDim2.new(0, 100, 1, 0)
-    tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-    tabBtn.Text = name
-    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    tabBtn.TextSize = 12
-    tabBtn.Font = Enum.Font.SourceSans
-    tabBtn.Parent = uiRefs.TabsContainer
-    
-    local closeTab = Instance.new("TextButton")
-    closeTab.Size = UDim2.new(0, 16, 1, 0)
-    closeTab.Position = UDim2.new(1, -18, 0, 0)
-    closeTab.BackgroundTransparency = 1
-    closeTab.Text = "×"
-    closeTab.TextColor3 = Color3.fromRGB(200, 50, 50)
-    closeTab.TextSize = 14
-    closeTab.Font = Enum.Font.SourceSansBold
-    closeTab.Parent = tabBtn
-    
-    closeTab.MouseButton1Click:Connect(function()
-        tabBtn:Destroy()
-        if currentScript == name then
-            currentScript = nil
-            uiRefs.EditorBox.Text = ""
-        end
-        self:UpdateTabs()
-    end)
-    
-    tabBtn.MouseButton1Click:Connect(function()
-        currentScript = name
-        for _, btn in pairs(uiRefs.TabsContainer:GetChildren()) do
-            if btn:IsA("TextButton") and btn ~= uiRefs.AddTabBtn then
-                btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-            end
-        end
-        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-        uiRefs.EditorBox.Text = scripts[name] or ""
-    end)
-    
-    if not scripts[name] then
-        scripts[name] = ""
-        self:RefreshScriptList()
-    end
-    
-    tabCounter = tabCounter + 1
-    self:UpdateTabs()
-    
-    -- Select first tab
-    if not currentScript then
-        currentScript = name
-        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-        uiRefs.EditorBox.Text = scripts[name] or ""
-    end
+function VortexUI:GetUI()
+    return uiRefs
 end
 
-function VortexX:UpdateTabs()
-    local tabs = {}
-    local offset = 0
-    for _, child in pairs(uiRefs.TabsContainer:GetChildren()) do
-        if child:IsA("TextButton") and child ~= uiRefs.AddTabBtn then
-            table.insert(tabs, child)
-        end
-    end
-    
-    for i, tab in ipairs(tabs) do
-        tab.Position = UDim2.new(i * 105, 0, 0, 0)
-        offset = i * 105 + 105
-    end
-    
-    uiRefs.AddTabBtn.Position = UDim2.new(offset, 0, 0, 0)
-    uiRefs.TabsContainer.CanvasSize = UDim2.new(offset + 110, 0, 0, 0)
-end
-
---[[
-    Script Management
-]]
-
-function VortexX:RefreshScriptList()
-    local list = uiRefs.ScriptList
-    for _, child in pairs(list:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
-        end
-    end
-    
-    local yPos = 5
-    for name, _ in pairs(scripts) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -10, 0, 28)
-        btn.Position = UDim2.new(0, 5, 0, yPos)
-        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-        btn.Text = "📄 " .. name
-        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        btn.TextSize = 12
-        btn.Font = Enum.Font.SourceSans
-        btn.TextXAlignment = Enum.TextXAlignment.Left
-        btn.Parent = list
-        
-        btn.MouseButton1Click:Connect(function()
-            currentScript = name
-            uiRefs.EditorBox.Text = scripts[name] or ""
-            for _, tab in pairs(uiRefs.TabsContainer:GetChildren()) do
-                if tab:IsA("TextButton") and tab ~= uiRefs.AddTabBtn then
-                    if tab.Name == "Tab_" .. name then
-                        tab.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-                    else
-                        tab.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                    end
-                end
-            end
-        end)
-        
-        btn.MouseEnter:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-        end)
-        btn.MouseLeave:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
-        end)
-        
-        yPos = yPos + 33
-    end
-    
-    list.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
-end
-
-function VortexX:AddScript(name, content)
-    scripts[name] = content or ""
-    self:RefreshScriptList()
-    return self
-end
-
---[[
-    Action Functions
-]]
-
-function VortexX:ExecuteScript()
-    local scriptText = uiRefs.EditorBox.Text
-    if scriptText and scriptText ~= "" then
-        local success, err = pcall(function()
-            local func = loadstring(scriptText)
-            if func then func() end
-        end)
-        if not success then
-            self:Notify("Execution Error", err, 3, "error")
-        else
-            self:Notify("Success", "Script executed!", 2, "success")
-        end
-    else
-        self:Notify("Error", "No script to execute!", 2, "error")
-    end
-end
-
-function VortexX:ClearEditor()
-    uiRefs.EditorBox.Text = ""
-    if currentScript then
-        scripts[currentScript] = ""
-    end
-    self:Notify("Cleared", "Editor cleared!", 1, "info")
-end
-
-function VortexX:OpenScript()
-    self:Notify("Open", "Click a script from the folder", 2, "info")
-end
-
-function VortexX:SaveScript()
-    if currentScript then
-        scripts[currentScript] = uiRefs.EditorBox.Text
-        self:RefreshScriptList()
-        self:Notify("Saved", "Script '" .. currentScript .. "' saved!", 2, "success")
-    else
-        self:Notify("Error", "No script selected!", 2, "error")
-    end
-end
-
-function VortexX:InjectScript()
-    local scriptText = uiRefs.EditorBox.Text
-    if scriptText and scriptText ~= "" then
-        self:Notify("Injected", "Script injected!", 2, "success")
-    else
-        self:Notify("Error", "No script to inject!", 2, "error")
-    end
-end
-
-function VortexX:KillPlayer()
-    local player = game.Players.LocalPlayer
-    if player and player.Character then
-        local char = player.Character
-        if char:FindFirstChild("Humanoid") then
-            char.Humanoid.Health = 0
-            self:Notify("Killed", "Player killed!", 2, "error")
-        end
-    else
-        self:Notify("Error", "No player found!", 2, "error")
-    end
-end
-
-function VortexX:UpdatePlayerLabel()
-    if uiRefs.PlayerLabel then
-        local players = game:GetService("Players")
-        local count = #players:GetPlayers()
-        uiRefs.PlayerLabel.Text = "Player [" .. count .. "]"
-    end
-end
-
---[[
-    Notification System
-]]
-
-function VortexX:Notify(title, message, duration, type)
-    duration = duration or 3
-    type = type or "info"
-    if not uiRefs.MainContainer then return end
-    
-    local colors = {
-        info = Color3.fromRGB(50, 150, 255),
-        success = Color3.fromRGB(0, 200, 100),
-        warning = Color3.fromRGB(255, 200, 50),
-        error = Color3.fromRGB(255, 50, 50)
-    }
-    
-    local notification = Instance.new("Frame")
-    notification.Size = UDim2.new(0, 300, 0, 60)
-    notification.Position = UDim2.new(1, -320, 0, 10)
-    notification.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-    notification.BorderSizePixel = 1
-    notification.BorderColor3 = Color3.fromRGB(50, 50, 60)
-    notification.Parent = uiRefs.MainContainer
-    
-    local colorBar = Instance.new("Frame")
-    colorBar.Size = UDim2.new(0, 4, 1, 0)
-    colorBar.BackgroundColor3 = colors[type] or colors.info
-    colorBar.BorderSizePixel = 0
-    colorBar.Parent = notification
-    
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, -15, 0.4, 0)
-    titleLabel.Position = UDim2.new(0, 10, 0, 5)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Text = title
-    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 14
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Font = Enum.Font.SourceSansBold
-    titleLabel.Parent = notification
-    
-    local msgLabel = Instance.new("TextLabel")
-    msgLabel.Size = UDim2.new(1, -15, 0.5, 0)
-    msgLabel.Position = UDim2.new(0, 10, 0.4, 0)
-    msgLabel.BackgroundTransparency = 1
-    msgLabel.Text = message
-    msgLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
-    msgLabel.TextSize = 12
-    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
-    msgLabel.Font = Enum.Font.SourceSans
-    msgLabel.Parent = notification
-    
-    local tweenService = game:GetService("TweenService")
-    notification.Position = UDim2.new(1, -10, 0, 10)
-    tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
-        {Position = UDim2.new(1, -320, 0, 10)}):Play()
-    
-    task.wait(duration)
-    tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
-        {Position = UDim2.new(1, -10, 0, 10)}):Play()
-    task.wait(0.3)
-    notification:Destroy()
-end
-
---[[
-    Destroy
-]]
-
-function VortexX:DestroyAll()
+function VortexUI:DestroyAll()
     if uiRefs.MainGui then
         uiRefs.MainGui:Destroy()
         uiRefs = {}
@@ -786,13 +417,4 @@ function VortexX:DestroyAll()
     end
 end
 
---[[
-    Initialize
-]]
-
-local function init()
-    VortexX:CreateUI()
-    return VortexX
-end
-
-return init()
+return VortexUI
