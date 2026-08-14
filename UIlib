@@ -1,5 +1,5 @@
 --[[
-    Vortex X UI Library - Full featured script hub with editor
+    Vortex X UI Library - Clean script hub with editor
     Uses CoreGui for proper display
     Usage: local vortex = loadstring(game:HttpGet("URL_TO_THIS_SCRIPT"))()
 ]]
@@ -12,23 +12,20 @@ VortexX._VERSION = "3.0.0"
 -- Internal storage
 local uiRefs = {}
 local isOpen = false
-local isAnimating = false
 local scripts = {}
 local currentScript = nil
-local scriptTabs = {}
 local tabCounter = 1
-local notificationQueue = {}
 
 -- Default scripts
 local defaultScripts = {
-    ["Arceus X V"] = "print('Arceus X V loaded!')\n-- Your Arceus X script here",
-    ["better Wolf"] = "print('Better Wolf loaded!')\n-- Better Wolf script here",
-    ["fates.lua"] = "print('Fates loaded!')\n-- Fates script here",
-    ["inf yrild.lua"] = "print('Infinite Yield loaded!')\n-- Infinite Yield script here",
-    ["light spam"] = "print('Light Spam loaded!')\n-- Light Spam script here",
-    ["Mm2.lua"] = "print('MM2 loaded!')\n-- MM2 script here",
-    ["Script 1.lua"] = "print('Script 1 loaded!')\n-- Your script here",
-    ["WL3.lua"] = "print('WL3 loaded!')\n-- WL3 script here"
+    ["Arceus XV"] = "print('Arceus XV loaded!')",
+    ["better Wolf"] = "print('Better Wolf loaded!')",
+    ["fates.lua"] = "print('Fates loaded!')",
+    ["inf yrild.lua"] = "print('Infinite Yield loaded!')",
+    ["liath spam"] = "print('Light Spam loaded!')",
+    ["Mm2.lua"] = "print('MM2 loaded!')",
+    ["Script 1.lua"] = "print('Script 1 loaded!')",
+    ["WL3.lua"] = "print('WL3 loaded!')"
 }
 
 --[[
@@ -46,8 +43,6 @@ function VortexX:CreateUI()
     end
     
     local coreGui = game:GetService("CoreGui")
-    
-    -- Create ScreenGui in CoreGui
     local screenGui = Instance.new("ScreenGui")
     screenGui.Name = "VortexX_MainUI"
     screenGui.ResetOnSpawn = false
@@ -60,7 +55,6 @@ function VortexX:CreateUI()
     mainContainer.Size = UDim2.new(1, 0, 1, 0)
     mainContainer.BackgroundTransparency = 1
     mainContainer.Visible = false
-    mainContainer.ClipsDescendants = true
     mainContainer.Parent = screenGui
     
     -- Background overlay
@@ -68,58 +62,47 @@ function VortexX:CreateUI()
     overlay.Name = "Overlay"
     overlay.Size = UDim2.new(1, 0, 1, 0)
     overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    overlay.BackgroundTransparency = 0.6
+    overlay.BackgroundTransparency = 0.5
     overlay.Visible = false
     overlay.Parent = mainContainer
     
-    -- Main panel (slide from left)
-    local panel = Instance.new("Frame")
-    panel.Name = "Panel"
-    panel.Size = UDim2.new(0, 900, 1, 0)
-    panel.Position = UDim2.new(0, -900, 0, 0)
-    panel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-    panel.BorderSizePixel = 0
-    panel.Parent = mainContainer
+    -- Close overlay button
+    local overlayButton = Instance.new("TextButton")
+    overlayButton.Name = "OverlayButton"
+    overlayButton.Size = UDim2.new(1, 0, 1, 0)
+    overlayButton.BackgroundTransparency = 1
+    overlayButton.Text = ""
+    overlayButton.Parent = overlay
     
-    -- Top bar button
-    local topBar = Instance.new("Frame")
-    topBar.Name = "TopBar"
-    topBar.Size = UDim2.new(0, 120, 0, 40)
-    topBar.Position = UDim2.new(0, 10, 0, 10)
-    topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    topBar.BorderSizePixel = 1
-    topBar.BorderColor3 = Color3.fromRGB(50, 50, 60)
-    topBar.Parent = mainContainer
+    -- Main window
+    local mainFrame = Instance.new("Frame")
+    mainFrame.Name = "MainFrame"
+    mainFrame.Size = UDim2.new(0, 550, 0, 600)
+    mainFrame.Position = UDim2.new(0.5, -275, 0.5, -300)
+    mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+    mainFrame.BorderSizePixel = 1
+    mainFrame.BorderColor3 = Color3.fromRGB(40, 40, 50)
+    mainFrame.Parent = mainContainer
     
-    local topButton = Instance.new("TextButton")
-    topButton.Name = "TopButton"
-    topButton.Size = UDim2.new(1, 0, 1, 0)
-    topButton.BackgroundTransparency = 1
-    topButton.Text = "⚡ Vortex X"
-    topButton.TextColor3 = Color3.fromRGB(255, 200, 50)
-    topButton.TextSize = 14
-    topButton.Font = Enum.Font.SourceSansBold
-    topButton.Parent = topBar
+    -- Title bar
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "TitleBar"
+    titleBar.Size = UDim2.new(1, 0, 0, 40)
+    titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    titleBar.BorderSizePixel = 0
+    titleBar.Parent = mainFrame
     
-    -- Panel header
-    local panelHeader = Instance.new("Frame")
-    panelHeader.Name = "PanelHeader"
-    panelHeader.Size = UDim2.new(1, 0, 0, 50)
-    panelHeader.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-    panelHeader.BorderSizePixel = 0
-    panelHeader.Parent = panel
-    
-    local headerTitle = Instance.new("TextLabel")
-    headerTitle.Name = "HeaderTitle"
-    headerTitle.Size = UDim2.new(0.5, 0, 1, 0)
-    headerTitle.Position = UDim2.new(0, 15, 0, 0)
-    headerTitle.BackgroundTransparency = 1
-    headerTitle.Text = "⚡ Vortex X"
-    headerTitle.TextColor3 = Color3.fromRGB(255, 200, 50)
-    headerTitle.TextSize = 22
-    headerTitle.TextXAlignment = Enum.TextXAlignment.Left
-    headerTitle.Font = Enum.Font.SourceSansBold
-    headerTitle.Parent = panelHeader
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Name = "TitleLabel"
+    titleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    titleLabel.Position = UDim2.new(0, 15, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = "⚡ Vortex X"
+    titleLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+    titleLabel.TextSize = 20
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Font = Enum.Font.SourceSansBold
+    titleLabel.Parent = titleBar
     
     local closeButton = Instance.new("TextButton")
     closeButton.Name = "CloseButton"
@@ -130,133 +113,152 @@ function VortexX:CreateUI()
     closeButton.TextColor3 = Color3.fromRGB(255, 100, 100)
     closeButton.TextSize = 20
     closeButton.Font = Enum.Font.SourceSansBold
-    closeButton.Parent = panelHeader
+    closeButton.Parent = titleBar
     
-    -- Layout: Left sidebar (tabs)
-    local sidebar = Instance.new("Frame")
-    sidebar.Name = "Sidebar"
-    sidebar.Size = UDim2.new(0, 180, 1, -50)
-    sidebar.Position = UDim2.new(0, 0, 0, 50)
-    sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
-    sidebar.BorderSizePixel = 1
-    sidebar.BorderColor3 = Color3.fromRGB(40, 40, 50)
-    sidebar.Parent = panel
+    -- Top bar button (floating)
+    local topBar = Instance.new("Frame")
+    topBar.Name = "TopBar"
+    topBar.Size = UDim2.new(0, 120, 0, 35)
+    topBar.Position = UDim2.new(0, 10, 0, 10)
+    topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    topBar.BorderSizePixel = 1
+    topBar.BorderColor3 = Color3.fromRGB(40, 40, 50)
+    topBar.Parent = mainContainer
     
-    local tabList = Instance.new("ScrollingFrame")
-    tabList.Name = "TabList"
-    tabList.Size = UDim2.new(1, -10, 1, -50)
-    tabList.Position = UDim2.new(0, 5, 0, 5)
-    tabList.BackgroundTransparency = 1
-    tabList.ScrollBarThickness = 4
-    tabList.CanvasSize = UDim2.new(0, 0, 0, 200)
-    tabList.Parent = sidebar
+    local topButton = Instance.new("TextButton")
+    topButton.Name = "TopButton"
+    topButton.Size = UDim2.new(1, 0, 1, 0)
+    topButton.BackgroundTransparency = 1
+    topButton.Text = "⚡ Vortex X"
+    topButton.TextColor3 = Color3.fromRGB(255, 200, 50)
+    topButton.TextSize = 13
+    topButton.Font = Enum.Font.SourceSansBold
+    topButton.Parent = topBar
     
-    -- "Add new tab" button
+    -- Content area
+    local contentFrame = Instance.new("Frame")
+    contentFrame.Name = "ContentFrame"
+    contentFrame.Size = UDim2.new(1, -20, 1, -55)
+    contentFrame.Position = UDim2.new(0, 10, 0, 45)
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Parent = mainFrame
+    
+    -- Tabs section
+    local tabsFrame = Instance.new("Frame")
+    tabsFrame.Name = "TabsFrame"
+    tabsFrame.Size = UDim2.new(1, 0, 0, 30)
+    tabsFrame.BackgroundTransparency = 1
+    tabsFrame.Parent = contentFrame
+    
+    local tabsLabel = Instance.new("TextLabel")
+    tabsLabel.Name = "TabsLabel"
+    tabsLabel.Size = UDim2.new(0.15, 0, 1, 0)
+    tabsLabel.BackgroundTransparency = 1
+    tabsLabel.Text = "TABS"
+    tabsLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+    tabsLabel.TextSize = 12
+    tabsLabel.TextXAlignment = Enum.TextXAlignment.Left
+    tabsLabel.Font = Enum.Font.SourceSansBold
+    tabsLabel.Parent = tabsFrame
+    
+    local tabsContainer = Instance.new("ScrollingFrame")
+    tabsContainer.Name = "TabsContainer"
+    tabsContainer.Size = UDim2.new(0.85, -10, 1, 0)
+    tabsContainer.Position = UDim2.new(0.15, 10, 0, 0)
+    tabsContainer.BackgroundTransparency = 1
+    tabsContainer.ScrollBarThickness = 3
+    tabsContainer.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
+    tabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    tabsContainer.Parent = tabsFrame
+    
+    -- Add tab button
     local addTabBtn = Instance.new("TextButton")
     addTabBtn.Name = "AddTabBtn"
-    addTabBtn.Size = UDim2.new(1, -10, 0, 35)
-    addTabBtn.Position = UDim2.new(0, 5, 0, 5)
+    addTabBtn.Size = UDim2.new(0, 100, 1, 0)
     addTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     addTabBtn.Text = "+ Add new tab"
     addTabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    addTabBtn.TextSize = 13
+    addTabBtn.TextSize = 12
     addTabBtn.Font = Enum.Font.SourceSans
-    addTabBtn.Parent = tabList
+    addTabBtn.Parent = tabsContainer
     
-    -- Main content area
-    local contentArea = Instance.new("Frame")
-    contentArea.Name = "ContentArea"
-    contentArea.Size = UDim2.new(1, -180, 1, -50)
-    contentArea.Position = UDim2.new(0, 180, 0, 50)
-    contentArea.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
-    contentArea.BorderSizePixel = 0
-    contentArea.Parent = panel
+    -- Separator
+    local separator1 = Instance.new("Frame")
+    separator1.Name = "Separator1"
+    separator1.Size = UDim2.new(1, 0, 0, 1)
+    separator1.Position = UDim2.new(0, 0, 0, 35)
+    separator1.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    separator1.BorderSizePixel = 0
+    separator1.Parent = contentFrame
     
-    -- Top section: Scripts folder and buttons
-    local topSection = Instance.new("Frame")
-    topSection.Name = "TopSection"
-    topSection.Size = UDim2.new(1, 0, 0.5, -5)
-    topSection.BackgroundTransparency = 1
-    topSection.Parent = contentArea
+    -- Scripts folder
+    local scriptsFrame = Instance.new("Frame")
+    scriptsFrame.Name = "ScriptsFrame"
+    scriptsFrame.Size = UDim2.new(1, 0, 0, 200)
+    scriptsFrame.Position = UDim2.new(0, 0, 0, 40)
+    scriptsFrame.BackgroundTransparency = 1
+    scriptsFrame.Parent = contentFrame
     
-    -- Scripts folder label
     local folderLabel = Instance.new("TextLabel")
     folderLabel.Name = "FolderLabel"
-    folderLabel.Size = UDim2.new(1, -20, 0, 30)
-    folderLabel.Position = UDim2.new(0, 10, 0, 5)
+    folderLabel.Size = UDim2.new(1, 0, 0, 25)
     folderLabel.BackgroundTransparency = 1
     folderLabel.Text = "📁 SCRIPTS FOLDER"
     folderLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
-    folderLabel.TextSize = 14
+    folderLabel.TextSize = 12
     folderLabel.TextXAlignment = Enum.TextXAlignment.Left
     folderLabel.Font = Enum.Font.SourceSansBold
-    folderLabel.Parent = topSection
+    folderLabel.Parent = scriptsFrame
     
-    -- Scripts list
     local scriptList = Instance.new("ScrollingFrame")
     scriptList.Name = "ScriptList"
-    scriptList.Size = UDim2.new(1, -20, 1, -40)
-    scriptList.Position = UDim2.new(0, 10, 0, 35)
-    scriptList.BackgroundTransparency = 1
+    scriptList.Size = UDim2.new(1, 0, 1, -30)
+    scriptList.Position = UDim2.new(0, 0, 0, 25)
+    scriptList.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+    scriptList.BorderSizePixel = 1
+    scriptList.BorderColor3 = Color3.fromRGB(35, 35, 42)
     scriptList.ScrollBarThickness = 4
-    scriptList.CanvasSize = UDim2.new(0, 0, 0, 300)
-    scriptList.Parent = topSection
+    scriptList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scriptList.Parent = scriptsFrame
     
-    -- Bottom section: Editor
-    local bottomSection = Instance.new("Frame")
-    bottomSection.Name = "BottomSection"
-    bottomSection.Size = UDim2.new(1, 0, 0.5, 0)
-    bottomSection.Position = UDim2.new(0, 0, 0.5, 0)
-    bottomSection.BackgroundTransparency = 1
-    bottomSection.Parent = contentArea
+    -- Separator 2
+    local separator2 = Instance.new("Frame")
+    separator2.Name = "Separator2"
+    separator2.Size = UDim2.new(1, 0, 0, 1)
+    separator2.Position = UDim2.new(0, 0, 0, 245)
+    separator2.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    separator2.BorderSizePixel = 0
+    separator2.Parent = contentFrame
     
-    -- Tabs for editor
-    local editorTabBar = Instance.new("Frame")
-    editorTabBar.Name = "EditorTabBar"
-    editorTabBar.Size = UDim2.new(1, -20, 0, 30)
-    editorTabBar.Position = UDim2.new(0, 10, 0, 0)
-    editorTabBar.BackgroundTransparency = 1
-    editorTabBar.Parent = bottomSection
+    -- Editor
+    local editorFrame = Instance.new("Frame")
+    editorFrame.Name = "EditorFrame"
+    editorFrame.Size = UDim2.new(1, 0, 1, -250)
+    editorFrame.Position = UDim2.new(0, 0, 0, 250)
+    editorFrame.BackgroundTransparency = 1
+    editorFrame.Parent = contentFrame
     
     local editorLabel = Instance.new("TextLabel")
     editorLabel.Name = "EditorLabel"
-    editorLabel.Size = UDim2.new(0.15, 0, 1, 0)
+    editorLabel.Size = UDim2.new(1, 0, 0, 20)
     editorLabel.BackgroundTransparency = 1
     editorLabel.Text = "📝 Editor"
     editorLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    editorLabel.TextSize = 13
+    editorLabel.TextSize = 12
     editorLabel.TextXAlignment = Enum.TextXAlignment.Left
     editorLabel.Font = Enum.Font.SourceSansBold
-    editorLabel.Parent = editorTabBar
-    
-    local editorTabsContainer = Instance.new("ScrollingFrame")
-    editorTabsContainer.Name = "EditorTabsContainer"
-    editorTabsContainer.Size = UDim2.new(0.85, -20, 1, 0)
-    editorTabsContainer.Position = UDim2.new(0.15, 10, 0, 0)
-    editorTabsContainer.BackgroundTransparency = 1
-    editorTabsContainer.ScrollBarThickness = 3
-    editorTabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    editorTabsContainer.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
-    editorTabsContainer.Parent = editorTabBar
-    
-    -- Editor text box
-    local editorFrame = Instance.new("Frame")
-    editorFrame.Name = "EditorFrame"
-    editorFrame.Size = UDim2.new(1, -20, 1, -40)
-    editorFrame.Position = UDim2.new(0, 10, 0, 35)
-    editorFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-    editorFrame.BorderSizePixel = 1
-    editorFrame.BorderColor3 = Color3.fromRGB(40, 40, 50)
-    editorFrame.Parent = bottomSection
+    editorLabel.Parent = editorFrame
     
     local editorBox = Instance.new("TextBox")
     editorBox.Name = "EditorBox"
-    editorBox.Size = UDim2.new(1, -10, 1, -10)
-    editorBox.Position = UDim2.new(0, 5, 0, 5)
-    editorBox.BackgroundTransparency = 1
+    editorBox.Size = UDim2.new(1, 0, 1, -25)
+    editorBox.Position = UDim2.new(0, 0, 0, 20)
+    editorBox.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    editorBox.BorderSizePixel = 1
+    editorBox.BorderColor3 = Color3.fromRGB(35, 35, 42)
     editorBox.Text = ""
     editorBox.TextColor3 = Color3.fromRGB(200, 220, 255)
-    editorBox.TextSize = 14
+    editorBox.TextSize = 13
     editorBox.Font = Enum.Font.Code
     editorBox.TextXAlignment = Enum.TextXAlignment.Left
     editorBox.TextYAlignment = Enum.TextYAlignment.Top
@@ -266,13 +268,13 @@ function VortexX:CreateUI()
     editorBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 100)
     editorBox.Parent = editorFrame
     
-    -- Action buttons
+    -- Button bar
     local buttonBar = Instance.new("Frame")
     buttonBar.Name = "ButtonBar"
-    buttonBar.Size = UDim2.new(1, -20, 0, 40)
-    buttonBar.Position = UDim2.new(0, 10, 0, 35)
+    buttonBar.Size = UDim2.new(1, 0, 0, 40)
+    buttonBar.Position = UDim2.new(0, 0, 1, -40)
     buttonBar.BackgroundTransparency = 1
-    buttonBar.Parent = bottomSection
+    buttonBar.Parent = contentFrame
     
     local buttons = {}
     local buttonNames = {"Execute", "Clear", "Open", "Save", "Inject"}
@@ -292,7 +294,7 @@ function VortexX:CreateUI()
         btn.BackgroundColor3 = buttonColors[i]
         btn.Text = name
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.TextSize = 13
+        btn.TextSize = 12
         btn.Font = Enum.Font.SourceSansBold
         btn.BackgroundTransparency = 0.2
         btn.Parent = buttonBar
@@ -307,35 +309,35 @@ function VortexX:CreateUI()
         buttons[name] = btn
     end
     
-    -- Player info and kill button (right side)
+    -- Player info and kill button
     local playerFrame = Instance.new("Frame")
     playerFrame.Name = "PlayerFrame"
-    playerFrame.Size = UDim2.new(0, 200, 1, -5)
-    playerFrame.Position = UDim2.new(1, -205, 0, 2.5)
+    playerFrame.Size = UDim2.new(0, 180, 1, -5)
+    playerFrame.Position = UDim2.new(1, -185, 0, 2.5)
     playerFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
     playerFrame.BorderSizePixel = 0
     playerFrame.Parent = buttonBar
     
     local playerLabel = Instance.new("TextLabel")
     playerLabel.Name = "PlayerLabel"
-    playerLabel.Size = UDim2.new(0.6, -10, 1, 0)
+    playerLabel.Size = UDim2.new(0.55, -10, 1, 0)
     playerLabel.Position = UDim2.new(0, 5, 0, 0)
     playerLabel.BackgroundTransparency = 1
-    playerLabel.Text = "Player [0]"
+    playerLabel.Text = "No Roblox"
     playerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-    playerLabel.TextSize = 13
+    playerLabel.TextSize = 12
     playerLabel.TextXAlignment = Enum.TextXAlignment.Left
     playerLabel.Font = Enum.Font.SourceSans
     playerLabel.Parent = playerFrame
     
     local killBtn = Instance.new("TextButton")
     killBtn.Name = "KillBtn"
-    killBtn.Size = UDim2.new(0.35, -10, 0.8, 0)
-    killBtn.Position = UDim2.new(0.65, 5, 0.5, -15)
+    killBtn.Size = UDim2.new(0.4, -10, 0.8, 0)
+    killBtn.Position = UDim2.new(0.6, 5, 0.5, -15)
     killBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
     killBtn.Text = "Kill"
     killBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    killBtn.TextSize = 13
+    killBtn.TextSize = 12
     killBtn.Font = Enum.Font.SourceSansBold
     killBtn.BackgroundTransparency = 0.2
     killBtn.Parent = playerFrame
@@ -347,27 +349,56 @@ function VortexX:CreateUI()
         killBtn.BackgroundTransparency = 0.2
     end)
     
+    -- Draggable functionality
+    local dragging = false
+    local dragInput, dragStart, startPos
+    
+    titleBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            mainFrame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+    
     -- Store references
     uiRefs = {
         MainGui = screenGui,
         MainContainer = mainContainer,
         Overlay = overlay,
-        Panel = panel,
+        MainFrame = mainFrame,
         TopBar = topBar,
         TopButton = topButton,
         CloseButton = closeButton,
-        TabList = tabList,
+        TabsContainer = tabsContainer,
         AddTabBtn = addTabBtn,
         ScriptList = scriptList,
         EditorBox = editorBox,
-        EditorTabsContainer = editorTabsContainer,
         Buttons = buttons,
         PlayerLabel = playerLabel,
         KillBtn = killBtn,
-        BottomSection = bottomSection
+        OverlayButton = overlayButton
     }
     
-    -- Setup events
+    -- Events
     topButton.MouseButton1Click:Connect(function()
         self:ToggleUI()
     end)
@@ -375,14 +406,6 @@ function VortexX:CreateUI()
     closeButton.MouseButton1Click:Connect(function()
         self:CloseUI()
     end)
-    
-    -- Fix: Use MouseButton1Click on a separate transparent button instead of overlay Frame
-    local overlayButton = Instance.new("TextButton")
-    overlayButton.Name = "OverlayButton"
-    overlayButton.Size = UDim2.new(1, 0, 1, 0)
-    overlayButton.BackgroundTransparency = 1
-    overlayButton.Text = ""
-    overlayButton.Parent = overlay
     
     overlayButton.MouseButton1Click:Connect(function()
         self:CloseUI()
@@ -392,7 +415,6 @@ function VortexX:CreateUI()
         self:AddNewTab("Script " .. tabCounter)
     end)
     
-    -- Button events
     buttons.Execute.MouseButton1Click:Connect(function()
         self:ExecuteScript()
     end)
@@ -442,20 +464,8 @@ function VortexX:CreateUI()
         scripts[name] = content
     end
     self:RefreshScriptList()
-    
-    -- Add default tab
     self:AddNewTab("Script 1")
-    
-    -- Update player count
-    self:UpdatePlayerCount()
-    
-    -- Start player count updater
-    spawn(function()
-        while uiRefs.MainGui do
-            self:UpdatePlayerCount()
-            task.wait(5)
-        end
-    end)
+    self:UpdatePlayerLabel()
     
     return uiRefs
 end
@@ -466,47 +476,16 @@ end
 
 function VortexX:OpenUI()
     if not uiRefs.MainContainer then return end
-    if isAnimating then return end
-    
-    isAnimating = true
     uiRefs.MainContainer.Visible = true
     uiRefs.Overlay.Visible = true
-    
-    -- Animate panel in
-    local tweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    
-    local panelTween = tweenService:Create(uiRefs.Panel, tweenInfo, {Position = UDim2.new(0, 0, 0, 0)})
-    local overlayTween = tweenService:Create(uiRefs.Overlay, tweenInfo, {BackgroundTransparency = 0.6})
-    
-    panelTween:Play()
-    overlayTween:Play()
-    
     isOpen = true
-    task.wait(0.35)
-    isAnimating = false
 end
 
 function VortexX:CloseUI()
     if not uiRefs.MainContainer or not isOpen then return end
-    if isAnimating then return end
-    
-    isAnimating = true
-    
-    local tweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-    
-    local panelTween = tweenService:Create(uiRefs.Panel, tweenInfo, {Position = UDim2.new(0, -900, 0, 0)})
-    local overlayTween = tweenService:Create(uiRefs.Overlay, tweenInfo, {BackgroundTransparency = 0})
-    
-    panelTween:Play()
-    overlayTween:Play()
-    
-    isOpen = false
-    task.wait(0.35)
     uiRefs.MainContainer.Visible = false
     uiRefs.Overlay.Visible = false
-    isAnimating = false
+    isOpen = false
 end
 
 function VortexX:ToggleUI()
@@ -522,7 +501,7 @@ function VortexX:IsOpen()
 end
 
 --[[
-    Script Management
+    Tab Management
 ]]
 
 function VortexX:AddNewTab(name)
@@ -534,9 +513,8 @@ function VortexX:AddNewTab(name)
     tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
     tabBtn.TextSize = 12
     tabBtn.Font = Enum.Font.SourceSans
-    tabBtn.Parent = uiRefs.EditorTabsContainer
+    tabBtn.Parent = uiRefs.TabsContainer
     
-    -- Close tab button
     local closeTab = Instance.new("TextButton")
     closeTab.Size = UDim2.new(0, 16, 1, 0)
     closeTab.Position = UDim2.new(1, -18, 0, 0)
@@ -548,102 +526,106 @@ function VortexX:AddNewTab(name)
     closeTab.Parent = tabBtn
     
     closeTab.MouseButton1Click:Connect(function()
-        if #scriptTabs > 1 then
-            tabBtn:Destroy()
-            for i, tab in ipairs(scriptTabs) do
-                if tab == tabBtn then
-                    table.remove(scriptTabs, i)
-                    break
-                end
-            end
-            self:UpdateEditorTabs()
-        else
-            self:Notify("Warning", "Cannot close the last tab!", 2, "warning")
+        tabBtn:Destroy()
+        if currentScript == name then
+            currentScript = nil
+            uiRefs.EditorBox.Text = ""
         end
+        self:UpdateTabs()
     end)
     
     tabBtn.MouseButton1Click:Connect(function()
-        currentScript = tabBtn.Name:gsub("Tab_", "")
-        for _, btn in pairs(uiRefs.EditorTabsContainer:GetChildren()) do
-            if btn:IsA("TextButton") and btn.Name ~= "CloseTab" then
+        currentScript = name
+        for _, btn in pairs(uiRefs.TabsContainer:GetChildren()) do
+            if btn:IsA("TextButton") and btn ~= uiRefs.AddTabBtn then
                 btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
             end
         end
         tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-        uiRefs.EditorBox.Text = scripts[currentScript] or ""
+        uiRefs.EditorBox.Text = scripts[name] or ""
     end)
     
-    table.insert(scriptTabs, tabBtn)
-    
-    if #scriptTabs == 1 then
-        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-        currentScript = name
-        uiRefs.EditorBox.Text = scripts[currentScript] or ""
-    end
-    
-    -- Update canvas size
-    uiRefs.EditorTabsContainer.CanvasSize = UDim2.new(#scriptTabs * 105, 0, 0, 0)
-    tabCounter = tabCounter + 1
-    
-    -- Add script to list if not exists
     if not scripts[name] then
         scripts[name] = ""
         self:RefreshScriptList()
     end
+    
+    tabCounter = tabCounter + 1
+    self:UpdateTabs()
+    
+    -- Select first tab
+    if not currentScript then
+        currentScript = name
+        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        uiRefs.EditorBox.Text = scripts[name] or ""
+    end
 end
 
-function VortexX:UpdateEditorTabs()
-    -- Rebuild tab positions
-    for i, tab in ipairs(scriptTabs) do
-        tab.Position = UDim2.new((i-1) * 105, 0, 0, 0)
+function VortexX:UpdateTabs()
+    local tabs = {}
+    local offset = 0
+    for _, child in pairs(uiRefs.TabsContainer:GetChildren()) do
+        if child:IsA("TextButton") and child ~= uiRefs.AddTabBtn then
+            table.insert(tabs, child)
+        end
     end
-    uiRefs.EditorTabsContainer.CanvasSize = UDim2.new(#scriptTabs * 105, 0, 0, 0)
+    
+    for i, tab in ipairs(tabs) do
+        tab.Position = UDim2.new(i * 105, 0, 0, 0)
+        offset = i * 105 + 105
+    end
+    
+    uiRefs.AddTabBtn.Position = UDim2.new(offset, 0, 0, 0)
+    uiRefs.TabsContainer.CanvasSize = UDim2.new(offset + 110, 0, 0, 0)
 end
+
+--[[
+    Script Management
+]]
 
 function VortexX:RefreshScriptList()
     local list = uiRefs.ScriptList
-    -- Clear existing (keep scrollbar)
     for _, child in pairs(list:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
         end
     end
     
-    local yPos = 0
+    local yPos = 5
     for name, _ in pairs(scripts) do
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -10, 0, 30)
+        btn.Size = UDim2.new(1, -10, 0, 28)
         btn.Position = UDim2.new(0, 5, 0, yPos)
-        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        btn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
         btn.Text = "📄 " .. name
         btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        btn.TextSize = 13
+        btn.TextSize = 12
         btn.Font = Enum.Font.SourceSans
         btn.TextXAlignment = Enum.TextXAlignment.Left
         btn.Parent = list
         
         btn.MouseButton1Click:Connect(function()
-            -- Open this script in editor
             currentScript = name
             uiRefs.EditorBox.Text = scripts[name] or ""
-            -- Highlight tab
-            for _, tab in ipairs(scriptTabs) do
-                if tab.Name == "Tab_" .. name then
-                    tab.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-                else
-                    tab.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            for _, tab in pairs(uiRefs.TabsContainer:GetChildren()) do
+                if tab:IsA("TextButton") and tab ~= uiRefs.AddTabBtn then
+                    if tab.Name == "Tab_" .. name then
+                        tab.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+                    else
+                        tab.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                    end
                 end
             end
         end)
         
         btn.MouseEnter:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+            btn.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
         end)
         btn.MouseLeave:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 42)
         end)
         
-        yPos = yPos + 35
+        yPos = yPos + 33
     end
     
     list.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
@@ -655,19 +637,6 @@ function VortexX:AddScript(name, content)
     return self
 end
 
-function VortexX:DeleteScript(name)
-    if scripts[name] then
-        scripts[name] = nil
-        self:RefreshScriptList()
-        return true
-    end
-    return false
-end
-
-function VortexX:GetScript(name)
-    return scripts[name]
-end
-
 --[[
     Action Functions
 ]]
@@ -677,16 +646,12 @@ function VortexX:ExecuteScript()
     if scriptText and scriptText ~= "" then
         local success, err = pcall(function()
             local func = loadstring(scriptText)
-            if func then
-                func()
-            else
-                error("Failed to load script")
-            end
+            if func then func() end
         end)
         if not success then
-            self:Notify("Execution Error", err, 4, "error")
+            self:Notify("Execution Error", err, 3, "error")
         else
-            self:Notify("Success", "Script executed successfully!", 2, "success")
+            self:Notify("Success", "Script executed!", 2, "success")
         end
     else
         self:Notify("Error", "No script to execute!", 2, "error")
@@ -702,8 +667,7 @@ function VortexX:ClearEditor()
 end
 
 function VortexX:OpenScript()
-    -- Open file dialog simulation
-    self:Notify("Open", "Click a script from the folder to open it", 3, "info")
+    self:Notify("Open", "Click a script from the folder", 2, "info")
 end
 
 function VortexX:SaveScript()
@@ -712,14 +676,14 @@ function VortexX:SaveScript()
         self:RefreshScriptList()
         self:Notify("Saved", "Script '" .. currentScript .. "' saved!", 2, "success")
     else
-        self:Notify("Error", "No script selected to save!", 2, "error")
+        self:Notify("Error", "No script selected!", 2, "error")
     end
 end
 
 function VortexX:InjectScript()
     local scriptText = uiRefs.EditorBox.Text
     if scriptText and scriptText ~= "" then
-        self:Notify("Injected", "Script injected successfully!", 2, "success")
+        self:Notify("Injected", "Script injected!", 2, "success")
     else
         self:Notify("Error", "No script to inject!", 2, "error")
     end
@@ -728,19 +692,17 @@ end
 function VortexX:KillPlayer()
     local player = game.Players.LocalPlayer
     if player and player.Character then
-        local character = player.Character
-        if character:FindFirstChild("Humanoid") then
-            character.Humanoid.Health = 0
+        local char = player.Character
+        if char:FindFirstChild("Humanoid") then
+            char.Humanoid.Health = 0
             self:Notify("Killed", "Player killed!", 2, "error")
-        else
-            self:Notify("Error", "No humanoid found!", 2, "error")
         end
     else
-        self:Notify("Error", "Player not found!", 2, "error")
+        self:Notify("Error", "No player found!", 2, "error")
     end
 end
 
-function VortexX:UpdatePlayerCount()
+function VortexX:UpdatePlayerLabel()
     if uiRefs.PlayerLabel then
         local players = game:GetService("Players")
         local count = #players:GetPlayers()
@@ -755,7 +717,6 @@ end
 function VortexX:Notify(title, message, duration, type)
     duration = duration or 3
     type = type or "info"
-    
     if not uiRefs.MainContainer then return end
     
     local colors = {
@@ -766,8 +727,8 @@ function VortexX:Notify(title, message, duration, type)
     }
     
     local notification = Instance.new("Frame")
-    notification.Size = UDim2.new(0, 350, 0, 70)
-    notification.Position = UDim2.new(1, -10, 0, 10 + #notificationQueue * 80)
+    notification.Size = UDim2.new(0, 300, 0, 60)
+    notification.Position = UDim2.new(1, -320, 0, 10)
     notification.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
     notification.BorderSizePixel = 1
     notification.BorderColor3 = Color3.fromRGB(50, 50, 60)
@@ -785,7 +746,7 @@ function VortexX:Notify(title, message, duration, type)
     titleLabel.BackgroundTransparency = 1
     titleLabel.Text = title
     titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    titleLabel.TextSize = 15
+    titleLabel.TextSize = 14
     titleLabel.TextXAlignment = Enum.TextXAlignment.Left
     titleLabel.Font = Enum.Font.SourceSansBold
     titleLabel.Parent = notification
@@ -796,40 +757,21 @@ function VortexX:Notify(title, message, duration, type)
     msgLabel.BackgroundTransparency = 1
     msgLabel.Text = message
     msgLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
-    msgLabel.TextSize = 13
+    msgLabel.TextSize = 12
     msgLabel.TextXAlignment = Enum.TextXAlignment.Left
     msgLabel.Font = Enum.Font.SourceSans
     msgLabel.Parent = notification
     
-    table.insert(notificationQueue, notification)
-    
-    -- Animate in
     local tweenService = game:GetService("TweenService")
-    local tweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local posTween = tweenService:Create(notification, tweenInfo, {Position = UDim2.new(1, -370, 0, 10 + (#notificationQueue - 1) * 80)})
-    posTween:Play()
+    notification.Position = UDim2.new(1, -10, 0, 10)
+    tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), 
+        {Position = UDim2.new(1, -320, 0, 10)}):Play()
     
-    -- Auto remove
     task.wait(duration)
-    
-    -- Animate out
-    local outTween = tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
-        {Position = UDim2.new(1, -10, 0, 10 + (#notificationQueue - 1) * 80)})
-    outTween:Play()
+    tweenService:Create(notification, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), 
+        {Position = UDim2.new(1, -10, 0, 10)}):Play()
     task.wait(0.3)
-    
     notification:Destroy()
-    for i, n in ipairs(notificationQueue) do
-        if n == notification then
-            table.remove(notificationQueue, i)
-            break
-        end
-    end
-    
-    -- Update positions of remaining notifications
-    for i, n in ipairs(notificationQueue) do
-        n:TweenPosition(UDim2.new(1, -370, 0, 10 + (i - 1) * 80), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
-    end
 end
 
 --[[
@@ -841,17 +783,15 @@ function VortexX:DestroyAll()
         uiRefs.MainGui:Destroy()
         uiRefs = {}
         isOpen = false
-        isAnimating = false
-        notificationQueue = {}
     end
 end
 
 --[[
-    Initialize and return
+    Initialize
 ]]
 
 local function init()
-    local vortex = VortexX:CreateUI()
+    VortexX:CreateUI()
     return VortexX
 end
 
