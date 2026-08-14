@@ -1,0 +1,785 @@
+--[[
+    Vortex X UI Library - Full featured script hub with editor
+    Usage: local vortex = loadstring(game:HttpGet("URL_TO_THIS_SCRIPT"))()
+]]
+
+local VortexX = {}
+
+-- Version
+VortexX._VERSION = "3.0.0"
+
+-- Internal storage
+local uiRefs = {}
+local isOpen = false
+local isAnimating = false
+local scripts = {}
+local currentScript = nil
+local scriptTabs = {}
+local tabCounter = 1
+
+-- Default scripts
+local defaultScripts = {
+    ["Arceus X V"] = "print('Arceus X V loaded!')",
+    ["better Wolf"] = "print('Better Wolf loaded!')",
+    ["fates.lua"] = "print('Fates loaded!')",
+    ["inf yrild.lua"] = "print('Infinite Yield loaded!')",
+    ["light spam"] = "print('Light Spam loaded!')",
+    ["Mm2.lua"] = "print('MM2 loaded!')",
+    ["Script 1.lua"] = "print('Script 1 loaded!')",
+    ["WL3.lua"] = "print('WL3 loaded!')"
+}
+
+--[[
+    Main UI Creation
+]]
+
+function VortexX:CreateUI()
+    if uiRefs.MainGui then
+        self:DestroyAll()
+    end
+    
+    if not game or not game:GetService("CoreGui") then
+        error("This library requires Roblox environment")
+        return
+    end
+    
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "VortexX_MainUI"
+    screenGui.ResetOnSpawn = false
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    
+    -- Main container
+    local mainContainer = Instance.new("Frame")
+    mainContainer.Name = "MainContainer"
+    mainContainer.Size = UDim2.new(1, 0, 1, 0)
+    mainContainer.BackgroundTransparency = 1
+    mainContainer.Visible = false
+    mainContainer.ClipsDescendants = true
+    
+    -- Background overlay
+    local overlay = Instance.new("Frame")
+    overlay.Name = "Overlay"
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    overlay.BackgroundTransparency = 0.6
+    overlay.Visible = false
+    
+    -- Main panel (slide from left)
+    local panel = Instance.new("Frame")
+    panel.Name = "Panel"
+    panel.Size = UDim2.new(0, 900, 1, 0)
+    panel.Position = UDim2.new(0, -900, 0, 0)
+    panel.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+    panel.BorderSizePixel = 0
+    
+    -- Top bar button
+    local topBar = Instance.new("Frame")
+    topBar.Name = "TopBar"
+    topBar.Size = UDim2.new(0, 120, 0, 40)
+    topBar.Position = UDim2.new(0, 10, 0, 10)
+    topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    topBar.BorderSizePixel = 1
+    topBar.BorderColor3 = Color3.fromRGB(50, 50, 60)
+    
+    local topButton = Instance.new("TextButton")
+    topButton.Name = "TopButton"
+    topButton.Size = UDim2.new(1, 0, 1, 0)
+    topButton.BackgroundTransparency = 1
+    topButton.Text = "⚡ Vortex X"
+    topButton.TextColor3 = Color3.fromRGB(255, 200, 50)
+    topButton.TextSize = 14
+    topButton.Font = Enum.Font.SourceSansBold
+    
+    -- Panel header
+    local panelHeader = Instance.new("Frame")
+    panelHeader.Name = "PanelHeader"
+    panelHeader.Size = UDim2.new(1, 0, 0, 50)
+    panelHeader.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    panelHeader.BorderSizePixel = 0
+    
+    local headerTitle = Instance.new("TextLabel")
+    headerTitle.Name = "HeaderTitle"
+    headerTitle.Size = UDim2.new(0.5, 0, 1, 0)
+    headerTitle.Position = UDim2.new(0, 15, 0, 0)
+    headerTitle.BackgroundTransparency = 1
+    headerTitle.Text = "⚡ Vortex X"
+    headerTitle.TextColor3 = Color3.fromRGB(255, 200, 50)
+    headerTitle.TextSize = 22
+    headerTitle.TextXAlignment = Enum.TextXAlignment.Left
+    headerTitle.Font = Enum.Font.SourceSansBold
+    
+    local closeButton = Instance.new("TextButton")
+    closeButton.Name = "CloseButton"
+    closeButton.Size = UDim2.new(0, 40, 1, 0)
+    closeButton.Position = UDim2.new(1, -40, 0, 0)
+    closeButton.BackgroundTransparency = 1
+    closeButton.Text = "✕"
+    closeButton.TextColor3 = Color3.fromRGB(255, 100, 100)
+    closeButton.TextSize = 20
+    closeButton.Font = Enum.Font.SourceSansBold
+    
+    -- Layout: Left sidebar (tabs)
+    local sidebar = Instance.new("Frame")
+    sidebar.Name = "Sidebar"
+    sidebar.Size = UDim2.new(0, 180, 1, -50)
+    sidebar.Position = UDim2.new(0, 0, 0, 50)
+    sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
+    sidebar.BorderSizePixel = 0
+    
+    local tabList = Instance.new("ScrollingFrame")
+    tabList.Name = "TabList"
+    tabList.Size = UDim2.new(1, -10, 1, -50)
+    tabList.Position = UDim2.new(0, 5, 0, 5)
+    tabList.BackgroundTransparency = 1
+    tabList.ScrollBarThickness = 4
+    tabList.CanvasSize = UDim2.new(0, 0, 0, 200)
+    
+    -- "Add new tab" button
+    local addTabBtn = Instance.new("TextButton")
+    addTabBtn.Name = "AddTabBtn"
+    addTabBtn.Size = UDim2.new(1, -10, 0, 35)
+    addTabBtn.Position = UDim2.new(0, 5, 0, 5)
+    addTabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    addTabBtn.Text = "+ Add new tab"
+    addTabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    addTabBtn.TextSize = 13
+    addTabBtn.Font = Enum.Font.SourceSans
+    
+    -- Main content area
+    local contentArea = Instance.new("Frame")
+    contentArea.Name = "ContentArea"
+    contentArea.Size = UDim2.new(1, -180, 1, -50)
+    contentArea.Position = UDim2.new(0, 180, 0, 50)
+    contentArea.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    borderSizePixel = 0
+    
+    -- Top section: Scripts folder and buttons
+    local topSection = Instance.new("Frame")
+    topSection.Name = "TopSection"
+    topSection.Size = UDim2.new(1, 0, 0.5, -5)
+    topSection.BackgroundTransparency = 1
+    
+    -- Scripts folder label
+    local folderLabel = Instance.new("TextLabel")
+    folderLabel.Name = "FolderLabel"
+    folderLabel.Size = UDim2.new(1, -20, 0, 30)
+    folderLabel.Position = UDim2.new(0, 10, 0, 5)
+    folderLabel.BackgroundTransparency = 1
+    folderLabel.Text = "📁 SCRIPTS FOLDER"
+    folderLabel.TextColor3 = Color3.fromRGB(255, 200, 50)
+    folderLabel.TextSize = 14
+    folderLabel.TextXAlignment = Enum.TextXAlignment.Left
+    folderLabel.Font = Enum.Font.SourceSansBold
+    
+    -- Scripts list
+    local scriptList = Instance.new("ScrollingFrame")
+    scriptList.Name = "ScriptList"
+    scriptList.Size = UDim2.new(1, -20, 1, -40)
+    scriptList.Position = UDim2.new(0, 10, 0, 35)
+    scriptList.BackgroundTransparency = 1
+    scriptList.ScrollBarThickness = 4
+    scriptList.CanvasSize = UDim2.new(0, 0, 0, 300)
+    
+    -- Bottom section: Editor
+    local bottomSection = Instance.new("Frame")
+    bottomSection.Name = "BottomSection"
+    bottomSection.Size = UDim2.new(1, 0, 0.5, 0)
+    bottomSection.Position = UDim2.new(0, 0, 0.5, 0)
+    bottomSection.BackgroundTransparency = 1
+    
+    -- Tabs for editor
+    local editorTabBar = Instance.new("Frame")
+    editorTabBar.Name = "EditorTabBar"
+    editorTabBar.Size = UDim2.new(1, -20, 0, 30)
+    editorTabBar.Position = UDim2.new(0, 10, 0, 0)
+    editorTabBar.BackgroundTransparency = 1
+    
+    local editorLabel = Instance.new("TextLabel")
+    editorLabel.Name = "EditorLabel"
+    editorLabel.Size = UDim2.new(0.15, 0, 1, 0)
+    editorLabel.BackgroundTransparency = 1
+    editorLabel.Text = "📝 Editor"
+    editorLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    editorLabel.TextSize = 13
+    editorLabel.TextXAlignment = Enum.TextXAlignment.Left
+    editorLabel.Font = Enum.Font.SourceSansBold
+    
+    local editorTabsContainer = Instance.new("ScrollingFrame")
+    editorTabsContainer.Name = "EditorTabsContainer"
+    editorTabsContainer.Size = UDim2.new(0.85, -20, 1, 0)
+    editorTabsContainer.Position = UDim2.new(0.15, 10, 0, 0)
+    editorTabsContainer.BackgroundTransparency = 1
+    editorTabsContainer.ScrollBarThickness = 3
+    editorTabsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
+    editorTabsContainer.VerticalScrollBarPosition = Enum.VerticalScrollBarPosition.Right
+    
+    -- Editor text box
+    local editorFrame = Instance.new("Frame")
+    editorFrame.Name = "EditorFrame"
+    editorFrame.Size = UDim2.new(1, -20, 1, -40)
+    editorFrame.Position = UDim2.new(0, 10, 0, 35)
+    editorFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+    editorFrame.BorderSizePixel = 1
+    editorFrame.BorderColor3 = Color3.fromRGB(40, 40, 50)
+    
+    local editorBox = Instance.new("TextBox")
+    editorBox.Name = "EditorBox"
+    editorBox.Size = UDim2.new(1, -10, 1, -10)
+    editorBox.Position = UDim2.new(0, 5, 0, 5)
+    editorBox.BackgroundTransparency = 1
+    editorBox.Text = ""
+    editorBox.TextColor3 = Color3.fromRGB(200, 220, 255)
+    editorBox.TextSize = 14
+    editorBox.Font = Enum.Font.Code
+    editorBox.TextXAlignment = Enum.TextXAlignment.Left
+    editorBox.TextYAlignment = Enum.TextYAlignment.Top
+    editorBox.MultiLine = true
+    editorBox.ClearTextOnFocus = false
+    editorBox.PlaceholderText = "Type your script here..."
+    editorBox.PlaceholderColor3 = Color3.fromRGB(80, 80, 100)
+    
+    -- Action buttons
+    local buttonBar = Instance.new("Frame")
+    buttonBar.Name = "ButtonBar"
+    buttonBar.Size = UDim2.new(1, -20, 0, 40)
+    buttonBar.Position = UDim2.new(0, 10, 0, 35)
+    buttonBar.BackgroundTransparency = 1
+    
+    local buttons = {}
+    local buttonNames = {"Execute", "Clear", "Open", "Save", "Inject"}
+    local buttonColors = {
+        Color3.fromRGB(0, 200, 100),
+        Color3.fromRGB(200, 50, 50),
+        Color3.fromRGB(50, 150, 255),
+        Color3.fromRGB(255, 150, 50),
+        Color3.fromRGB(200, 50, 200)
+    }
+    
+    for i, name in ipairs(buttonNames) do
+        local btn = Instance.new("TextButton")
+        btn.Name = "Btn_" .. name
+        btn.Size = UDim2.new(0, 80, 1, -5)
+        btn.Position = UDim2.new((i-1) * 0.12 + 0.01, 0, 0, 2.5)
+        btn.BackgroundColor3 = buttonColors[i]
+        btn.Text = name
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 13
+        btn.Font = Enum.Font.SourceSansBold
+        btn.BackgroundTransparency = 0.2
+        
+        btn.MouseEnter:Connect(function()
+            btn.BackgroundTransparency = 0
+        end)
+        btn.MouseLeave:Connect(function()
+            btn.BackgroundTransparency = 0.2
+        end)
+        
+        btn.Parent = buttonBar
+        buttons[name] = btn
+    end
+    
+    -- Player info and kill button (right side)
+    local playerFrame = Instance.new("Frame")
+    playerFrame.Name = "PlayerFrame"
+    playerFrame.Size = UDim2.new(0, 200, 1, -5)
+    playerFrame.Position = UDim2.new(1, -205, 0, 2.5)
+    playerFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    playerFrame.BorderSizePixel = 0
+    
+    local playerLabel = Instance.new("TextLabel")
+    playerLabel.Name = "PlayerLabel"
+    playerLabel.Size = UDim2.new(0.6, -10, 1, 0)
+    playerLabel.Position = UDim2.new(0, 5, 0, 0)
+    playerLabel.BackgroundTransparency = 1
+    playerLabel.Text = "Player [4396]"
+    playerLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    playerLabel.TextSize = 13
+    playerLabel.TextXAlignment = Enum.TextXAlignment.Left
+    playerLabel.Font = Enum.Font.SourceSans
+    
+    local killBtn = Instance.new("TextButton")
+    killBtn.Name = "KillBtn"
+    killBtn.Size = UDim2.new(0.35, -10, 0.8, 0)
+    killBtn.Position = UDim2.new(0.65, 5, 0.5, -15)
+    killBtn.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+    killBtn.Text = "Kill"
+    killBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    killBtn.TextSize = 13
+    killBtn.Font = Enum.Font.SourceSansBold
+    killBtn.BackgroundTransparency = 0.2
+    
+    killBtn.MouseEnter:Connect(function()
+        killBtn.BackgroundTransparency = 0
+    end)
+    killBtn.MouseLeave:Connect(function()
+        killBtn.BackgroundTransparency = 0.2
+    end)
+    
+    -- Assemble UI
+    topButton.Parent = topBar
+    topBar.Parent = mainContainer
+    
+    panelHeader.Parent = panel
+    headerTitle.Parent = panelHeader
+    closeButton.Parent = panelHeader
+    
+    -- Sidebar
+    addTabBtn.Parent = sidebar
+    tabList.Parent = sidebar
+    sidebar.Parent = panel
+    
+    -- Content area
+    -- Top section
+    folderLabel.Parent = topSection
+    scriptList.Parent = topSection
+    topSection.Parent = contentArea
+    
+    -- Bottom section
+    editorLabel.Parent = editorTabBar
+    editorTabsContainer.Parent = editorTabBar
+    editorTabBar.Parent = bottomSection
+    
+    editorFrame.Parent = bottomSection
+    editorBox.Parent = editorFrame
+    
+    -- Button bar
+    buttonBar.Parent = bottomSection
+    
+    -- Player frame
+    playerLabel.Parent = playerFrame
+    killBtn.Parent = playerFrame
+    playerFrame.Parent = buttonBar
+    
+    bottomSection.Parent = contentArea
+    contentArea.Parent = panel
+    
+    panel.Parent = mainContainer
+    overlay.Parent = mainContainer
+    mainContainer.Parent = screenGui
+    screenGui.Parent = game:GetService("CoreGui")
+    
+    -- Store references
+    uiRefs = {
+        MainGui = screenGui,
+        MainContainer = mainContainer,
+        Overlay = overlay,
+        Panel = panel,
+        TopBar = topBar,
+        TopButton = topButton,
+        CloseButton = closeButton,
+        TabList = tabList,
+        AddTabBtn = addTabBtn,
+        ScriptList = scriptList,
+        EditorBox = editorBox,
+        EditorTabsContainer = editorTabsContainer,
+        Buttons = buttons,
+        PlayerLabel = playerLabel,
+        KillBtn = killBtn,
+        AddTabBtn = addTabBtn
+    }
+    
+    -- Setup events
+    topButton.MouseButton1Click:Connect(function()
+        self:ToggleUI()
+    end)
+    
+    closeButton.MouseButton1Click:Connect(function()
+        self:CloseUI()
+    end)
+    
+    overlay.MouseButton1Click:Connect(function()
+        self:CloseUI()
+    end)
+    
+    addTabBtn.MouseButton1Click:Connect(function()
+        self:AddNewTab("Script " .. tabCounter)
+    end)
+    
+    -- Button events
+    buttons.Execute.MouseButton1Click:Connect(function()
+        self:ExecuteScript()
+    end)
+    
+    buttons.Clear.MouseButton1Click:Connect(function()
+        self:ClearEditor()
+    end)
+    
+    buttons.Open.MouseButton1Click:Connect(function()
+        self:OpenScript()
+    end)
+    
+    buttons.Save.MouseButton1Click:Connect(function()
+        self:SaveScript()
+    end)
+    
+    buttons.Inject.MouseButton1Click:Connect(function()
+        self:InjectScript()
+    end)
+    
+    killBtn.MouseButton1Click:Connect(function()
+        self:KillPlayer()
+    end)
+    
+    -- Keyboard shortcuts
+    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if input.KeyCode == Enum.KeyCode.Escape and isOpen then
+            self:CloseUI()
+        end
+        if input.KeyCode == Enum.KeyCode.F5 and isOpen then
+            self:ExecuteScript()
+        end
+        if input.KeyCode == Enum.KeyCode.F6 and isOpen then
+            self:ClearEditor()
+        end
+        if input.KeyCode == Enum.KeyCode.F7 and isOpen then
+            self:SaveScript()
+        end
+        if input.KeyCode == Enum.KeyCode.F8 and isOpen then
+            self:InjectScript()
+        end
+    end)
+    
+    -- Load default scripts
+    for name, content in pairs(defaultScripts) do
+        scripts[name] = content
+    end
+    self:RefreshScriptList()
+    
+    -- Add default tab
+    self:AddNewTab("Script 1")
+    
+    -- Update player count
+    self:UpdatePlayerCount()
+    
+    return uiRefs
+end
+
+--[[
+    UI Control Functions
+]]
+
+function VortexX:OpenUI()
+    if not uiRefs.MainContainer then return end
+    if isAnimating then return end
+    
+    isAnimating = true
+    uiRefs.MainContainer.Visible = true
+    uiRefs.Overlay.Visible = true
+    uiRefs.Panel.Position = UDim2.new(0, -900, 0, 0)
+    
+    uiRefs.Panel:TweenPosition(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+    uiRefs.Overlay:TweenPosition(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+    
+    isOpen = true
+    task.wait(0.35)
+    isAnimating = false
+end
+
+function VortexX:CloseUI()
+    if not uiRefs.MainContainer or not isOpen then return end
+    if isAnimating then return end
+    
+    isAnimating = true
+    uiRefs.Panel:TweenPosition(UDim2.new(0, -900, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
+    uiRefs.Overlay:TweenPosition(UDim2.new(0, -900, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
+    
+    isOpen = false
+    task.wait(0.35)
+    uiRefs.MainContainer.Visible = false
+    uiRefs.Overlay.Visible = false
+    isAnimating = false
+end
+
+function VortexX:ToggleUI()
+    if isOpen then
+        self:CloseUI()
+    else
+        self:OpenUI()
+    end
+end
+
+function VortexX:IsOpen()
+    return isOpen
+end
+
+--[[
+    Script Management
+]]
+
+function VortexX:AddNewTab(name)
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Name = "Tab_" .. name
+    tabBtn.Size = UDim2.new(0, 100, 1, 0)
+    tabBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    tabBtn.Text = name
+    tabBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    tabBtn.TextSize = 12
+    tabBtn.Font = Enum.Font.SourceSans
+    
+    -- Close tab button
+    local closeTab = Instance.new("TextButton")
+    closeTab.Size = UDim2.new(0, 16, 1, 0)
+    closeTab.Position = UDim2.new(1, -18, 0, 0)
+    closeTab.BackgroundTransparency = 1
+    closeTab.Text = "×"
+    closeTab.TextColor3 = Color3.fromRGB(200, 50, 50)
+    closeTab.TextSize = 14
+    closeTab.Font = Enum.Font.SourceSansBold
+    closeTab.Parent = tabBtn
+    
+    closeTab.MouseButton1Click:Connect(function()
+        if #scriptTabs > 1 then
+            tabBtn:Destroy()
+            for i, tab in ipairs(scriptTabs) do
+                if tab == tabBtn then
+                    table.remove(scriptTabs, i)
+                    break
+                end
+            end
+            self:UpdateEditorTabs()
+        end
+    end)
+    
+    tabBtn.MouseButton1Click:Connect(function()
+        currentScript = tabBtn.Name:gsub("Tab_", "")
+        for _, btn in pairs(uiRefs.EditorTabsContainer:GetChildren()) do
+            if btn:IsA("TextButton") then
+                btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            end
+        end
+        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        uiRefs.EditorBox.Text = scripts[currentScript] or ""
+    end)
+    
+    tabBtn.Parent = uiRefs.EditorTabsContainer
+    table.insert(scriptTabs, tabBtn)
+    
+    if #scriptTabs == 1 then
+        tabBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+        currentScript = name
+        uiRefs.EditorBox.Text = scripts[currentScript] or ""
+    end
+    
+    -- Update canvas size
+    uiRefs.EditorTabsContainer.CanvasSize = UDim2.new(#scriptTabs * 105, 0, 0, 0)
+    tabCounter = tabCounter + 1
+    
+    -- Add script to list if not exists
+    if not scripts[name] then
+        scripts[name] = ""
+        self:RefreshScriptList()
+    end
+end
+
+function VortexX:UpdateEditorTabs()
+    -- Rebuild tab positions
+    for i, tab in ipairs(scriptTabs) do
+        tab.Position = UDim2.new((i-1) * 105, 0, 0, 0)
+    end
+    uiRefs.EditorTabsContainer.CanvasSize = UDim2.new(#scriptTabs * 105, 0, 0, 0)
+end
+
+function VortexX:RefreshScriptList()
+    local list = uiRefs.ScriptList
+    -- Clear existing
+    for _, child in pairs(list:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+    
+    local yPos = 0
+    for name, _ in pairs(scripts) do
+        local btn = Instance.new("TextButton")
+        btn.Size = UDim2.new(1, -10, 0, 30)
+        btn.Position = UDim2.new(0, 5, 0, yPos)
+        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        btn.Text = "📄 " .. name
+        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+        btn.TextSize = 13
+        btn.Font = Enum.Font.SourceSans
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        
+        btn.MouseButton1Click:Connect(function()
+            -- Open this script in editor
+            currentScript = name
+            uiRefs.EditorBox.Text = scripts[name] or ""
+            -- Highlight tab
+            for _, tab in ipairs(scriptTabs) do
+                if tab.Name == "Tab_" .. name then
+                    tab.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+                else
+                    tab.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                end
+            end
+        end)
+        
+        btn.MouseEnter:Connect(function()
+            btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+        end)
+        btn.MouseLeave:Connect(function()
+            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+        end)
+        
+        btn.Parent = list
+        yPos = yPos + 35
+    end
+    
+    list.CanvasSize = UDim2.new(0, 0, 0, yPos + 10)
+end
+
+--[[
+    Action Functions
+]]
+
+function VortexX:ExecuteScript()
+    local scriptText = uiRefs.EditorBox.Text
+    if scriptText and scriptText ~= "" then
+        local success, err = pcall(function()
+            loadstring(scriptText)()
+        end)
+        if not success then
+            self:Notify("Execution Error", err, 3, "error")
+        else
+            self:Notify("Success", "Script executed successfully!", 2, "success")
+        end
+    else
+        self:Notify("Error", "No script to execute!", 2, "error")
+    end
+end
+
+function VortexX:ClearEditor()
+    uiRefs.EditorBox.Text = ""
+    if currentScript then
+        scripts[currentScript] = ""
+    end
+    self:Notify("Cleared", "Editor cleared!", 1, "info")
+end
+
+function VortexX:OpenScript()
+    -- In real implementation, this would open file dialog
+    -- For now, just show notification
+    self:Notify("Open", "Open file dialog would appear here", 2, "info")
+end
+
+function VortexX:SaveScript()
+    if currentScript then
+        scripts[currentScript] = uiRefs.EditorBox.Text
+        self:RefreshScriptList()
+        self:Notify("Saved", "Script '" .. currentScript .. "' saved!", 2, "success")
+    else
+        self:Notify("Error", "No script selected to save!", 2, "error")
+    end
+end
+
+function VortexX:InjectScript()
+    local scriptText = uiRefs.EditorBox.Text
+    if scriptText and scriptText ~= "" then
+        -- Simulate injection
+        self:Notify("Injected", "Script injected successfully!", 2, "success")
+    else
+        self:Notify("Error", "No script to inject!", 2, "error")
+    end
+end
+
+function VortexX:KillPlayer()
+    self:Notify("Killed", "Player killed!", 2, "error")
+end
+
+function VortexX:UpdatePlayerCount()
+    if uiRefs.PlayerLabel then
+        local players = game:GetService("Players")
+        local count = #players:GetPlayers()
+        uiRefs.PlayerLabel.Text = "Player [" .. count .. "]"
+    end
+end
+
+--[[
+    Notification System
+]]
+
+function VortexX:Notify(title, message, duration, type)
+    duration = duration or 3
+    type = type or "info"
+    
+    if not uiRefs.MainContainer then return end
+    
+    local colors = {
+        info = Color3.fromRGB(50, 150, 255),
+        success = Color3.fromRGB(0, 200, 100),
+        warning = Color3.fromRGB(255, 200, 50),
+        error = Color3.fromRGB(255, 50, 50)
+    }
+    
+    local notification = Instance.new("Frame")
+    notification.Size = UDim2.new(0, 350, 0, 70)
+    notification.Position = UDim2.new(1, -370, 0, 10)
+    notification.BackgroundColor3 = Color3.fromRGB(30, 30, 38)
+    notification.BorderSizePixel = 1
+    notification.BorderColor3 = Color3.fromRGB(50, 50, 60)
+    
+    local colorBar = Instance.new("Frame")
+    colorBar.Size = UDim2.new(0, 4, 1, 0)
+    colorBar.BackgroundColor3 = colors[type] or colors.info
+    colorBar.BorderSizePixel = 0
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(1, -15, 0.4, 0)
+    titleLabel.Position = UDim2.new(0, 10, 0, 5)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    titleLabel.TextSize = 15
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Font = Enum.Font.SourceSansBold
+    
+    local msgLabel = Instance.new("TextLabel")
+    msgLabel.Size = UDim2.new(1, -15, 0.5, 0)
+    msgLabel.Position = UDim2.new(0, 10, 0.4, 0)
+    msgLabel.BackgroundTransparency = 1
+    msgLabel.Text = message
+    msgLabel.TextColor3 = Color3.fromRGB(180, 180, 200)
+    msgLabel.TextSize = 13
+    msgLabel.TextXAlignment = Enum.TextXAlignment.Left
+    msgLabel.Font = Enum.Font.SourceSans
+    
+    colorBar.Parent = notification
+    titleLabel.Parent = notification
+    msgLabel.Parent = notification
+    notification.Parent = uiRefs.MainContainer
+    
+    -- Animate in
+    notification.Position = UDim2.new(1, -10, 0, 10)
+    notification:TweenPosition(UDim2.new(1, -370, 0, 10), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
+    
+    -- Auto remove
+    task.wait(duration)
+    notification:TweenPosition(UDim2.new(1, -10, 0, 10), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.3, true)
+    task.wait(0.3)
+    notification:Destroy()
+end
+
+--[[
+    Destroy
+]]
+
+function VortexX:DestroyAll()
+    if uiRefs.MainGui then
+        uiRefs.MainGui:Destroy()
+        uiRefs = {}
+        isOpen = false
+        isAnimating = false
+    end
+end
+
+--[[
+    Initialize and return
+]]
+
+local function init()
+    local vortex = VortexX:CreateUI()
+    return VortexX
+end
+
+return init()
