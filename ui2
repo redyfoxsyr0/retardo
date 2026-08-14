@@ -1,5 +1,5 @@
 --[[
-    PART 2: FUNCTIONS LIBRARY
+    VORTEX X FUNCTIONS
     This contains all the functions to control the UI
 ]]
 
@@ -17,13 +17,12 @@ local defaultScripts = {
     ["better Wolf"] = "print('Better Wolf loaded!')",
     ["fates.lua"] = "print('Fates loaded!')",
     ["inf yrild.lua"] = "print('Infinite Yield loaded!')",
-    ["liath spam"] = "print('Light Spam loaded!')",
+    ["light spam"] = "print('Light Spam loaded!')",
     ["Mm2.lua"] = "print('MM2 loaded!')",
     ["Script 1.lua"] = "print('Script 1 loaded!')",
     ["WL3.lua"] = "print('WL3 loaded!')"
 }
 
--- Initialize with UI
 function VortexFuncs:Init(ui)
     uiRefs = ui
     
@@ -45,91 +44,52 @@ function VortexFuncs:Init(ui)
     return self
 end
 
--- Setup events (connects buttons to functions)
 function VortexFuncs:SetupEvents()
     if not uiRefs then return end
     
-    -- Top button toggles UI
     uiRefs.TopButton.MouseButton1Click:Connect(function()
         self:ToggleUI()
     end)
     
-    -- Close button
     uiRefs.CloseButton.MouseButton1Click:Connect(function()
         self:CloseUI()
     end)
     
-    -- Overlay closes UI
     uiRefs.OverlayButton.MouseButton1Click:Connect(function()
         self:CloseUI()
     end)
     
-    -- Add tab button
     uiRefs.AddTabBtn.MouseButton1Click:Connect(function()
         self:AddNewTab("Script " .. tabCounter)
     end)
     
-    -- Execute button
     uiRefs.Buttons.Execute.MouseButton1Click:Connect(function()
         self:ExecuteScript()
     end)
     
-    -- Clear button
     uiRefs.Buttons.Clear.MouseButton1Click:Connect(function()
         self:ClearEditor()
     end)
     
-    -- Open button
     uiRefs.Buttons.Open.MouseButton1Click:Connect(function()
         self:OpenScript()
     end)
     
-    -- Save button
     uiRefs.Buttons.Save.MouseButton1Click:Connect(function()
         self:SaveScript()
     end)
     
-    -- Inject button
     uiRefs.Buttons.Inject.MouseButton1Click:Connect(function()
         self:InjectScript()
     end)
     
-    -- Kill button
     uiRefs.KillBtn.MouseButton1Click:Connect(function()
         self:KillPlayer()
-    end)
-    
-    -- Keyboard shortcuts
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        if gameProcessed then return end
-        if input.KeyCode == Enum.KeyCode.Escape then
-            self:CloseUI()
-        end
-        if input.KeyCode == Enum.KeyCode.F5 then
-            self:ExecuteScript()
-        end
-        if input.KeyCode == Enum.KeyCode.F6 then
-            self:ClearEditor()
-        end
-        if input.KeyCode == Enum.KeyCode.F7 then
-            self:SaveScript()
-        end
-        if input.KeyCode == Enum.KeyCode.F8 then
-            self:InjectScript()
-        end
-    end)
-    
-    -- Update player count every 5 seconds
-    spawn(function()
-        while uiRefs and uiRefs.MainGui do
-            self:UpdatePlayerLabel()
-            task.wait(5)
-        end
     end)
 end
 
 -- ============================================
--- UI CONTROL FUNCTIONS
+-- UI CONTROL FUNCTIONS (Call these!)
 -- ============================================
 
 function VortexFuncs:OpenUI()
@@ -160,7 +120,6 @@ end
 -- BUTTON FUNCTIONS (Call these!)
 -- ============================================
 
--- 1. EXECUTE BUTTON
 function VortexFuncs:ExecuteScript()
     local scriptText = uiRefs.EditorBox.Text
     if scriptText and scriptText ~= "" then
@@ -178,7 +137,6 @@ function VortexFuncs:ExecuteScript()
     end
 end
 
--- 2. CLEAR BUTTON
 function VortexFuncs:ClearEditor()
     uiRefs.EditorBox.Text = ""
     if currentScript then
@@ -187,12 +145,10 @@ function VortexFuncs:ClearEditor()
     self:Notify("Cleared", "Editor cleared!", 1, "info")
 end
 
--- 3. OPEN BUTTON
 function VortexFuncs:OpenScript()
     self:Notify("Open", "Click a script from the folder", 2, "info")
 end
 
--- 4. SAVE BUTTON
 function VortexFuncs:SaveScript()
     if currentScript then
         scripts[currentScript] = uiRefs.EditorBox.Text
@@ -203,7 +159,6 @@ function VortexFuncs:SaveScript()
     end
 end
 
--- 5. INJECT BUTTON
 function VortexFuncs:InjectScript()
     local scriptText = uiRefs.EditorBox.Text
     if scriptText and scriptText ~= "" then
@@ -213,7 +168,6 @@ function VortexFuncs:InjectScript()
     end
 end
 
--- 6. KILL BUTTON
 function VortexFuncs:KillPlayer()
     local player = game.Players.LocalPlayer
     if player and player.Character then
@@ -228,7 +182,7 @@ function VortexFuncs:KillPlayer()
 end
 
 -- ============================================
--- SCRIPT MANAGEMENT FUNCTIONS
+-- SCRIPT MANAGEMENT (Call these!)
 -- ============================================
 
 function VortexFuncs:AddScript(name, content)
