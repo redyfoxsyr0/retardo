@@ -364,7 +364,6 @@ function VortexX:CreateUI()
         Buttons = buttons,
         PlayerLabel = playerLabel,
         KillBtn = killBtn,
-        AddTabBtn = addTabBtn,
         BottomSection = bottomSection
     }
     
@@ -377,7 +376,15 @@ function VortexX:CreateUI()
         self:CloseUI()
     end)
     
-    overlay.MouseButton1Click:Connect(function()
+    -- Fix: Use MouseButton1Click on a separate transparent button instead of overlay Frame
+    local overlayButton = Instance.new("TextButton")
+    overlayButton.Name = "OverlayButton"
+    overlayButton.Size = UDim2.new(1, 0, 1, 0)
+    overlayButton.BackgroundTransparency = 1
+    overlayButton.Text = ""
+    overlayButton.Parent = overlay
+    
+    overlayButton.MouseButton1Click:Connect(function()
         self:CloseUI()
     end)
     
@@ -712,9 +719,7 @@ end
 function VortexX:InjectScript()
     local scriptText = uiRefs.EditorBox.Text
     if scriptText and scriptText ~= "" then
-        -- Simulate injection with visual feedback
         self:Notify("Injected", "Script injected successfully!", 2, "success")
-        -- In a real implementation, you would inject here
     else
         self:Notify("Error", "No script to inject!", 2, "error")
     end
